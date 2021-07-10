@@ -13,6 +13,11 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
   using arbitrary pattern formulas. This provides plenty of flexibility. Note
   that we breaks compatibility with the previous taint-mode format, e.g.
   `- source(...)` must now be written as `- pattern: source(...)`.
+- A new experimental 'join' mode. This mode runs multiple Semgrep rules
+  on a codebase and "joins" the results based on metavariable contents. This
+  creates the ability to ask questions of codebases like "do any 3rd party
+  libraries use a dangerous function, and do I import that library directly?"
+  with several Semgrep rules.
 
 ### Fixed
 - Apple M1: Semgrep installed from HomeBrew no longer hangs (#2432)
