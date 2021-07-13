@@ -732,7 +732,7 @@ and nested_formula_has_matches env formula lazy_ast_and_errors lazy_content
 
 (* less: use Set instead of list? *)
 and (evaluate_formula : env -> RM.t option -> S.sformula -> RM.t list) =
- fun env ctx_opt e ->
+ fun env opt_context e ->
   match e with
   | S.Leaf (R.P (xpat, inside)) ->
       let id = xpat.R.pid in
@@ -748,7 +748,7 @@ and (evaluate_formula : env -> RM.t option -> S.sformula -> RM.t list) =
       match_results
       |> List.map RM.match_result_to_range
       |> List.map (fun r -> { r with RM.kind })
-  | S.Or xs -> xs |> List.map (evaluate_formula env ctx_opt) |> List.flatten
+  | S.Or xs -> xs |> List.map (evaluate_formula env opt_context) |> List.flatten
   | S.And (selector_opt, xs) -> (
       let pos, neg, conds = split_and xs in
 
@@ -767,7 +767,7 @@ and (evaluate_formula : env -> RM.t option -> S.sformula -> RM.t list) =
        *)
 
       (* let's start with the positive ranges *)
-      let posrs = List.map (evaluate_formula env ctx_opt) pos in
+      let posrs = List.map (evaluate_formula env opt_context) pos in
       (* subtle: we need to process and intersect the pattern-inside after
        * (see tests/OTHER/rules/inside.yaml).
        * TODO: this is ugly; AND should be commutative, so we should just
@@ -786,7 +786,7 @@ and (evaluate_formula : env -> RM.t option -> S.sformula -> RM.t list) =
       let all_posr =
         match posrs @ posrs_inside with
         | [] -> (
-            match ctx_opt with
+            match opt_context with
             | None ->
                 [
                   S.match_selector ~err:"empty And; no positive terms in And"
@@ -813,7 +813,7 @@ and (evaluate_formula : env -> RM.t option -> S.sformula -> RM.t list) =
             |> List.fold_left
                  (fun acc x ->
                    RM.difference_ranges env.config acc
-                     (evaluate_formula env ctx_opt x))
+                     (evaluate_formula env opt_context x))
                  res
           in
           (* let's apply additional filters.
