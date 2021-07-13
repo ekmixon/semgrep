@@ -664,9 +664,7 @@ and operator =
   (* !is: *)
   | NotIs
   (* Shell *)
-  | Background
-
-(* & *)
+  | (* & *) Background
 
 (*e: type [[AST_generic.arithmetic_operator]] *)
 (*s: type [[AST_generic.incr_decr]] *)
