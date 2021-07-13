@@ -647,7 +647,13 @@ and satisfies_metavar_pattern_condition env r mvar opt_xlang formula =
         mvar;
       false
   | Some mval -> (
+      Parse_info.pp_full_token_info := true;
       let mval_range = MV.range_of_mvalue mval in
+      let r' =
+        (* Fix the range wrt the temporary file that we now use for
+           * evaluating the nested pattern formula. *)
+        { r with r = { start = 0; end_ = mval_range.end_ - mval_range.start } }
+      in
       match (opt_xlang, mval) with
       | None, __any_mval__ -> (
           (* We match wrt the same language as the rule.
@@ -663,25 +669,37 @@ and satisfies_metavar_pattern_condition env r mvar opt_xlang formula =
                 env.rule_id mvar;
               false
           | Some mast ->
-              let lazy_ast_and_errors = lazy (mast, []) in
-              let lazy_content =
-                lazy (Range.content_at_range env.file mval_range)
-              in
-              nested_formula_has_matches env formula lazy_ast_and_errors
-                lazy_content
-                (Some { r with r = mval_range }) )
+              let content = Range.content_at_range env.file mval_range in
+              let mval_ii = MV.ii_of_mval mval in
+              Common2.with_tmp_file ~str:content ~ext:"mvar-pattern"
+                (fun file ->
+                  (* We don't want having to re-parse `content', but then we
+                   * need to fix the token locations in it. *)
+                  let base_loc =
+                    Visitor_AST.range_of_tokens mval_ii
+                    |> fst |> PI.token_location_of_info
+                  in
+                  let fix_loc loc =
+                    {
+                      loc with
+                      PI.charpos = loc.PI.charpos - base_loc.charpos;
+                      line = loc.line - base_loc.line + 1;
+                      column = loc.column - base_loc.column;
+                      file;
+                    }
+                  in
+                  let fixing_visitor = Map_AST.mk_fix_token_locations fix_loc in
+                  let mast' = fixing_visitor.Map_AST.vprogram mast in
+                  (* ignore visitor; *)
+                  let lazy_ast_and_errors = lazy (mast', []) in
+                  nested_formula_has_matches { env with file } formula
+                    lazy_ast_and_errors
+                    (lazy content)
+                    (Some r')) )
       | Some xlang, MV.Text (content, _tok)
       | Some xlang, MV.E (G.L (G.String (content, _tok))) ->
           (* We reinterpret the matched text as `xlang`. *)
-          let ext =
-            match xlang with
-            | R.LRegex | R.LGeneric -> "generic"
-            | R.L (lang, _) -> (
-                match Lang.ext_of_lang lang with
-                | x :: _ -> x
-                | [] -> assert false )
-          in
-          Common2.with_tmp_file ~str:content ~ext (fun file ->
+          Common2.with_tmp_file ~str:content ~ext:"mvar-pattern" (fun file ->
               let lazy_ast_and_errors =
                 lazy
                   ( match xlang with
@@ -701,14 +719,6 @@ and satisfies_metavar_pattern_condition env r mvar opt_xlang formula =
                       (ast, errors)
                   | R.LRegex | R.LGeneric ->
                       failwith "requesting generic AST for LRegex|LGeneric" )
-              in
-              let r' =
-                (* Fix the range wrt the temporary file that we now use for
-                 * evaluating the nested pattern formula. *)
-                {
-                  r with
-                  r = { start = 0; end_ = mval_range.end_ - mval_range.start };
-                }
               in
               nested_formula_has_matches { env with file; xlang } formula
                 lazy_ast_and_errors
