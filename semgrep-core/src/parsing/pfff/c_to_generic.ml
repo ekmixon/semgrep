@@ -132,12 +132,10 @@ let rec type_ = function
   | TTypeName v1 ->
       let v1 = name v1 in
       G.TyN (G.Id (v1, G.empty_id_info ()))
-  | TMacroApply (v1, (_lp, v2, _rp)) ->
-      let v1 = dotted_ident_of_id v1 in
+  | TMacroApply (v1, (lp, v2, rp)) ->
+      let v1 = H.name_of_ids [ v1 ] in
       let v2 = type_ v2 in
-      G.TyNameApply (v1, [ G.TypeArg v2 ])
-
-and dotted_ident_of_id id = [ id ]
+      G.TyApply (G.TyN v1, (lp, [ G.TypeArg v2 ], rp))
 
 and function_type (v1, v2) =
   let v1 = type_ v1 and v2 = list (fun x -> G.ParamClassic (parameter x)) v2 in

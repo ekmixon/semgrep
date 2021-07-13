@@ -18,6 +18,7 @@ module H = Parse_tree_sitter_helpers
 module PI = Parse_info
 open AST_generic
 module G = AST_generic
+module H2 = AST_generic_helpers
 
 (*****************************************************************************)
 (* Prelude *)
@@ -1570,8 +1571,8 @@ and simple_user_type (env : env) ((v1, v2) : CST.simple_user_type) =
     match v2 with
     | Some x ->
         let args = type_arguments env x in
-        let name = [ v1 ] in
-        TyNameApply (name, args)
+        let name = H2.name_of_ids [ v1 ] in
+        TyApply (TyN name, args)
     | None -> TyN (Id (v1, empty_id_info ()))
   in
   v2
@@ -1668,7 +1669,7 @@ and type_ (env : env) ((v1, v2) : CST.type_) : type_ =
   v2
 
 and type_arguments (env : env) ((v1, v2, v3, v4) : CST.type_arguments) =
-  let _v1 = token env v1 (* "<" *) in
+  let v1 = token env v1 (* "<" *) in
   let v2 = type_projection env v2 in
   let v3 =
     List.map
@@ -1678,8 +1679,8 @@ and type_arguments (env : env) ((v1, v2, v3, v4) : CST.type_arguments) =
         v2)
       v3
   in
-  let _v4 = token env v4 (* ">" *) in
-  v2 :: v3
+  let v4 = token env v4 (* ">" *) in
+  (v1, v2 :: v3, v4)
 
 and type_constraint (env : env) ((v1, v2, v3, v4) : CST.type_constraint) :
     ident * type_ =

@@ -5,29 +5,35 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 ## Unreleased
 
 ### Added
-- HTML experimental support. This does not rely on the "generic" mode
-  but instead really parses the HTML using tree-sitter-html. This allows
-  some semantic matching (e.g., matching attributes in any order).
-- Vue.js alpha support (#1751)
 - New iteration of taint-mode that allows to specify sources/sanitizers/sinks
   using arbitrary pattern formulas. This provides plenty of flexibility. Note
   that we breaks compatibility with the previous taint-mode format, e.g.
   `- source(...)` must now be written as `- pattern: source(...)`.
 - A new experimental 'join' mode. This mode runs multiple Semgrep rules
   on a codebase and "joins" the results based on metavariable contents. This
-  creates the ability to ask questions of codebases like "do any 3rd party
+  enables asking questions of codebases like "do any 3rd party
   libraries use a dangerous function, and do I import that library directly?"
-  with several Semgrep rules.
+  using results from multiple Semgrep rules.
+- HTML experimental support. This does not rely on the "generic" mode
+  but instead really parses the HTML using tree-sitter-html. This allows
+  some semantic matching (e.g., matching attributes in any order).
+- Vue.js alpha support (#1751)
+- New matching option `implicit_ellipsis` that allows disabling the implicit
+  `...` that are added to record patterns, plus allow matching "spread fields"
+  (JS `...x`) at any position (#3120)
 
 ### Fixed
 - Apple M1: Semgrep installed from HomeBrew no longer hangs (#2432)
 - Ruby command shells are distinguished from strings (#3343)
 - Java varargs are now correctly matched (#3455)
 - Support for partial statements (e.g., `try { ... }`) for Java (#3417)
+- Java generics are now correctly stored in the AST (#3505)
 - Constant propagation now works inside Python `with` statements (#3402)
+- Metavariable value replacement in message/autofix no longer mixes up short and long names like $X vs $X2 (#3458)
 - Revert `pattern: $X` optimization (#3476)
 - metavariable-pattern: Allow filtering using a single `pattern` or
   `pattern-regex`
+- Dataflow: Translate call chains into IL
 
 ### Changed
 - Faster matching times for generic mode

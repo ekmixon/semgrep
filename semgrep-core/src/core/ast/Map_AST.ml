@@ -429,9 +429,9 @@ let (mk_visitor : visitor_in -> visitor_out) =
     | TyFun (v1, v2) ->
         let v1 = map_of_list map_parameter v1 and v2 = map_type_ v2 in
         TyFun (v1, v2)
-    | TyNameApply (v1, v2) ->
-        let v1 = map_dotted_ident v1 and v2 = map_type_arguments v2 in
-        TyNameApply (v1, v2)
+    | TyApply (v1, v2) ->
+        let v1 = map_type_ v1 and v2 = map_type_arguments v2 in
+        TyApply (v1, v2)
     | TyN v1 ->
         let v1 = map_name v1 in
         TyN v1
@@ -467,7 +467,7 @@ let (mk_visitor : visitor_in -> visitor_out) =
     | OtherType (v1, v2) ->
         let v1 = map_other_type_operator v1 and v2 = map_of_list map_any v2 in
         OtherType (v1, v2)
-  and map_type_arguments v = map_of_list map_type_argument v
+  and map_type_arguments v = map_bracket (map_of_list map_type_argument) v
   and map_type_argument = function
     | TypeArg v1 ->
         let v1 = map_type_ v1 in
