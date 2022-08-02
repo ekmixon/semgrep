@@ -96,7 +96,7 @@ for language in _LANGS_TO_EXTS.keys():
     for extension in _LANGS_TO_EXTS[language]:
         # When there are multiple languages for an extension,
         # take the first one
-        if not extension in _EXTS_TO_LANG:
+        if extension not in _EXTS_TO_LANG:
             _EXTS_TO_LANG[extension] = language
 
 

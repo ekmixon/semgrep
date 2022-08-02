@@ -129,32 +129,28 @@ GA_FEATURES = {
     "deep": ["expr_operator"],
 }
 
-NUM_ALPHA_FEATURES = sum([len(val) for val in ALPHA_FEATURES.values()])
-NUM_BETA_FEATURES = sum([len(val) for val in BETA_FEATURES.values()])
-NUM_GA_FEATURES = sum([len(val) for val in GA_FEATURES.values()])
+NUM_ALPHA_FEATURES = sum(len(val) for val in ALPHA_FEATURES.values())
+NUM_BETA_FEATURES = sum(len(val) for val in BETA_FEATURES.values())
+NUM_GA_FEATURES = sum(len(val) for val in GA_FEATURES.values())
 
 
 def find_path(
     root_dir: str, lang: str, category: str, subcategory: str, extension: str
 ):
     base_path = os.path.join(root_dir, lang, f"{category}_{subcategory}")
-    joined = base_path + "." + extension
-    if os.path.exists(joined):
-        return joined
-    else:
+    joined = f"{base_path}.{extension}"
+    if not os.path.exists(joined):
         generic_base_path = os.path.join(
             root_dir, "POLYGLOT", f"{category}_{subcategory}"
         )
-        joined = generic_base_path + "." + extension
-        return joined
+        joined = f"{generic_base_path}.{extension}"
+    return joined
 
 
 def _single_pattern_to_dict(pattern: str, language: str) -> Dict[str, Any]:
     pattern = pattern.strip()
     if len(pattern.split("\n")) > 1:
-        pattern = (
-            pattern + "\n"
-        )  # make sure multi-line patterns end in new-line otherwise semgrep dies # TODO is this still true?
+        pattern += "\n"
 
     sgrep_config_default: Dict[str, Any] = {
         "rules": [
@@ -191,7 +187,7 @@ def run_semgrep_on_example(
             print(output.stderr.decode("utf-8"))
             return json.loads(output.stdout.decode("utf-8"))
         else:
-            print("ERROR: " + str(output.returncode))
+            print(f"ERROR: {str(output.returncode)}")
             print(cmd)
             return None
 
@@ -242,15 +238,14 @@ def generate_cheatsheet(root_dir: str, html: bool):
             raise Exception(
                 f"rule '{code_path}' produced errors, please fix these before proceeding"
             )
-        else:
-            if "results" in result and not result["results"]:
-                raise Exception(
-                    f"rule '{code_path}' produced no findings and is useless, please fix or TODO before proceeding"
-                )
-            highlights.extend(
-                {"start": r["start"], "end": r["end"]}
-                for r in result.get("results", [])
+        if "results" in result and not result["results"]:
+            raise Exception(
+                f"rule '{code_path}' produced no findings and is useless, please fix or TODO before proceeding"
             )
+        highlights.extend(
+            {"start": r["start"], "end": r["end"]}
+            for r in result.get("results", [])
+        )
 
         entry = {
             "pattern": read_if_exists(semgrep_path),
@@ -355,33 +350,31 @@ def snippet_and_pattern_to_html(
     sgrep_pattern: str, sgrep_path: str, code_snippets: List[Tuple[str, str]]
 ):
     s = ""
-    if sgrep_pattern:
-        s += f'<div class="pattern"><a href="{sgrep_path}"><pre>{sgrep_pattern}</pre></a></div>\n'
-        if len([x for x in code_snippets if x[0]]):
-            # replace < and > in snippets to be &lt and &gt so that the code snippets can render
-            for i, code_snippet in enumerate(code_snippets):
-                snippet, path = code_snippet
-                snippet = snippet.replace("<", "&lt")
-                snippet = snippet.replace(">", "&gt")
-                code_snippets[i] = (snippet, path)
-
-            snippets_html = "".join(
-                [
-                    f'<div class="match"><a href="{path}"><pre><code>{snippet}</code></pre></a></div>\n'
-                    for snippet, path in code_snippets
-                ]
-            )
-            s += f"<div>{snippets_html}</div>"
-        else:
-            return (
-                f'<div class="notimplemented">This is missing an example!<br/>Or it doesn\'t work yet for this language!<br/>Edit {sgrep_path}</div>\n',
-                False,
-            )
-    else:
+    if not sgrep_pattern:
         return (
             f'<div class="notimplemented">not implemented, no sgrep pattern at {sgrep_path}</div>\n',
             False,
         )
+    s += f'<div class="pattern"><a href="{sgrep_path}"><pre>{sgrep_pattern}</pre></a></div>\n'
+    if not len([x for x in code_snippets if x[0]]):
+        return (
+            f'<div class="notimplemented">This is missing an example!<br/>Or it doesn\'t work yet for this language!<br/>Edit {sgrep_path}</div>\n',
+            False,
+        )
+    # replace < and > in snippets to be &lt and &gt so that the code snippets can render
+    for i, code_snippet in enumerate(code_snippets):
+        snippet, path = code_snippet
+        snippet = snippet.replace("<", "&lt")
+        snippet = snippet.replace(">", "&gt")
+        code_snippets[i] = (snippet, path)
+
+    snippets_html = "".join(
+        [
+            f'<div class="match"><a href="{path}"><pre><code>{snippet}</code></pre></a></div>\n'
+            for snippet, path in code_snippets
+        ]
+    )
+    s += f"<div>{snippets_html}</div>"
     return s, True
 
 
@@ -430,8 +423,7 @@ def check_if_test_exists(
     if subcategory in LANGUAGE_EXCEPTIONS.get(lang, []):
         return f"<td>&#128125;</td>\n"
     if test_matrix_entry in test_matrix_dict[lang]:
-        test_exists = test_matrix_dict[lang][test_matrix_entry]
-        if test_exists:
+        if test_exists := test_matrix_dict[lang][test_matrix_entry]:
             return f"<td>&#9989;</td>\n"
         else:
             return f"<td>&#10060;</td>\n"
@@ -441,14 +433,16 @@ def check_if_test_exists(
 def generate_table(
     cheatsheet: Dict[str, Any], test_matrix_dict: Dict[str, Dict[Tuple, bool]]
 ) -> str:
-    s = "<h2>Table of Languages and Features Supported</h2>"
-    s += '<table class="pure-table pure-table-bordered"><tr>\n<td></td>\n'
+    s = (
+        "<h2>Table of Languages and Features Supported</h2>"
+        + '<table class="pure-table pure-table-bordered"><tr>\n<td></td>\n'
+    )
 
     # get the feature headers in:
     s += generate_headers_for_table()
 
     # for each feature:
-    for lang in cheatsheet.keys():
+    for lang in cheatsheet:
         s += "<tr>\n"
         s += f"<th>{lang}</th>\n"
         for category, subcategories in ALPHA_FEATURES.items():
@@ -503,8 +497,7 @@ def cheatsheet_to_html(cheatsheet: Dict[str, Any]):
 
 def read_if_exists(path: Optional[str]):
     if path and os.path.exists(path):
-        text = str(open(path).read())
-        return text
+        return str(open(path).read())
 
 
 def lang_dir_to_ext(lang: str):
@@ -552,12 +545,10 @@ def print_to_html(stats):
 
 def compute_stats(dir_name: str, lang_dir: str):
     path = os.path.join(dir_name, lang_dir)
-    count_per_feature = {}
-    for f in FEATURES:
-        count_per_feature[f] = len(
-            glob.glob1(path, f"{f}*.{lang_dir_to_ext(lang_dir)}")
-        )
-    return count_per_feature
+    return {
+        f: len(glob.glob1(path, f"{f}*.{lang_dir_to_ext(lang_dir)}"))
+        for f in FEATURES
+    }
 
 
 def get_language_directories(dir_name: str) -> List[str]:
@@ -565,7 +556,7 @@ def get_language_directories(dir_name: str) -> List[str]:
     return [
         f
         for f in files
-        if os.path.isdir(os.path.join(dir_name, f)) and not f in EXCLUDE
+        if os.path.isdir(os.path.join(dir_name, f)) and f not in EXCLUDE
     ]
 
 
@@ -596,9 +587,7 @@ def parse_args():
     output_group.add_argument("-j", "--json", action="store_true", help="output JSON")
     output_group.add_argument("-t", "--html", action="store_true", help="output HTML")
 
-    args = p.parse_args()
-
-    return args
+    return p.parse_args()
 
 
 def main() -> None:

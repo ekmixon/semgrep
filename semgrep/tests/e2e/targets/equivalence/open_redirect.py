@@ -62,16 +62,13 @@ def url_validation(request):
         url=next, allowed_hosts=request.get_host()
     ):
         next = "/index"
-    response = HttpResponseRedirect(next) if next else HttpResponse(status=204)
-    return response
+    return HttpResponseRedirect(next) if next else HttpResponse(status=204)
 
 
 def url_validation2(request):
     # ok
     next = request.POST.get("next", request.GET.get("next"))
-    ok = is_safe_url(url=next, allowed_hosts=request.get_host())
-    if ok:
-        response = HttpResponseRedirect(next) if next else HttpResponse(status=204)
+    if ok := is_safe_url(url=next, allowed_hosts=request.get_host()):
+        return HttpResponseRedirect(next) if next else HttpResponse(status=204)
     else:
-        response = HttpResponseRedirect("index")
-    return response
+        return HttpResponseRedirect("index")

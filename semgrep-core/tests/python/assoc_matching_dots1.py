@@ -12,5 +12,5 @@ if (A or B) or C or D:
   foo()
 
 #OK:
-if A or A:
+if A:
   foo()

@@ -49,7 +49,6 @@ def test_parse_taint_rules():
     rules = config.get(RULES_KEY)
     for rule_dict in rules.value:
         validate_single_rule("testfile", rule_dict)
-    assert True
 
 
 def test_multiple_configs():
@@ -89,7 +88,7 @@ def test_multiple_configs():
         assert not errors
         rules = config.get_rules(True)
         assert len(rules) == 3
-        assert {"rule1", "rule2", "rule3"} == set([rule.id for rule in rules])
+        assert {"rule1", "rule2", "rule3"} == {rule.id for rule in rules}
 
 
 def test_default_yaml_type_safe():

@@ -23,8 +23,7 @@ class Fix:
 
 def _get_lines(path: Path) -> List[str]:
     contents = path.read_text()
-    lines = contents.split(SPLIT_CHAR)
-    return lines
+    return contents.split(SPLIT_CHAR)
 
 
 def _get_match_context(rule_match: RuleMatch) -> Tuple[int, int, int, int]:
@@ -95,10 +94,9 @@ def apply_fixes(
 
     for _, rule_matches in rule_matches_by_rule.items():
         for rule_match in rule_matches:
-            fix = rule_match.fix
             fix_regex = rule_match.fix_regex
             filepath = rule_match.path
-            if fix:
+            if fix := rule_match.fix:
                 try:
                     fixobj = _basic_fix(rule_match, fix)
                 except Exception as e:
@@ -134,10 +132,10 @@ def apply_fixes(
                     "fixed_lines"
                 ] = fixobj.fixed_lines  # Monkey patch in fixed lines
 
-    num_modified = len(modified_files)
     if len(modified_files):
+        num_modified = len(modified_files)
         logger.info(
             f"successfully modified {num_modified} file{'s' if num_modified > 1 else ''}."
         )
     else:
-        logger.info(f"no files modified.")
+        logger.info("no files modified.")

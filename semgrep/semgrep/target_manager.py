@@ -202,8 +202,7 @@ class TargetManager:
         """
         result = []
         for pattern in patterns:
-            result.append("**/" + pattern)
-            result.append("**/" + pattern + "/**")
+            result.extend((f"**/{pattern}", f"**/{pattern}/**"))
         return result
 
     @staticmethod

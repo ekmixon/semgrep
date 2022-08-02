@@ -219,13 +219,14 @@ class Range(NamedTuple):
         return hash((self.start, self.end))
 
     def __eq__(self, rhs: Any) -> bool:
-        if not isinstance(rhs, type(self)):
-            return False
-
         return (
-            self.start == rhs.start
-            and self.end == rhs.end
-            and self.metavariables_match(rhs)
+            (
+                self.start == rhs.start
+                and self.end == rhs.end
+                and self.metavariables_match(rhs)
+            )
+            if isinstance(rhs, type(self))
+            else False
         )
 
     def __lt__(self, rhs: Any) -> bool:

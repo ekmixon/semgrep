@@ -13,7 +13,7 @@ def _fail_subprocess_on_error(cmd):
     )
 
     if output.returncode != 0:
-        pytest.fail(f"Failed running cmd={cmd}" + output.stdout + output.stderr)
+        pytest.fail(f"Failed running cmd={cmd}{output.stdout}{output.stderr}")
 
 
 def test_semgrep_rules_repo(run_semgrep_in_tmp):

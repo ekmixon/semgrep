@@ -156,10 +156,7 @@ def compare_range_match(
         if "." in content:
             converted = float(content)
         else:
-            if base is not None:
-                converted = int(content, base=base)
-            else:
-                converted = int(content)
+            converted = int(content, base=base) if base is not None else int(content)
     except ValueError:
         logger.debug(
             f"metavariable '{metavariable}' incorrect comparison type '{content}'"
@@ -462,9 +459,10 @@ def evaluate(
         pattern_ids_to_pattern_matches.setdefault(pm.id, []).append(pm)
 
     initial_ranges: DebugRanges = {
-        pattern_id: set(pm.range for pm in pattern_matches)
+        pattern_id: {pm.range for pm in pattern_matches}
         for pattern_id, pattern_matches in pattern_ids_to_pattern_matches.items()
     }
+
     steps_for_debugging = [DebuggingStep("initial", None, initial_ranges, {})]
 
     if rule.mode == TAINT_MODE:
@@ -566,18 +564,18 @@ def _evaluate_expression(
                 ranges_left.intersection_update(remainining_ranges)
         else:
             raise UnknownOperatorError(f"unknown operator {expression.operator}")
-    else:
-        if expression.children is not None:
-            raise SemgrepError(
-                f"operator '{expression.operator}' must not have child operators"
-            )
-
+    elif expression.children is None:
         ranges_left = _evaluate_single_expression(
             expression,
             pattern_ids_to_pattern_matches,
             ranges_left,
             allow_exec=allow_exec,
             metavariable_propagation=metavariable_propagation,
+        )
+
+    else:
+        raise SemgrepError(
+            f"operator '{expression.operator}' must not have child operators"
         )
 
     add_debugging_info(

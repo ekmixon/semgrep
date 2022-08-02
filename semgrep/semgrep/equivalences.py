@@ -33,5 +33,5 @@ class Equivalence:
         return {
             "id": self._id,
             "pattern": self._pattern,
-            "languages": list(lang.value for lang in self._languages),
+            "languages": [lang.value for lang in self._languages],
         }

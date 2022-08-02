@@ -157,12 +157,11 @@ def _github_repo(repo_url: str, sha: Optional[str], repo_destination: Path):
         if not all_clean:
             raise GitError("Couldn't clean the repo, something is wrong. Deleting.")
         repo_sha = subprocess.check_output(["git", "rev-parse", "HEAD"])
-        if sha:
-            if not repo_sha.startswith(sha.encode("utf-8")):
-                shutil.rmtree(repo_destination)
-                raise GitError(
-                    f"Github repo is broken (not set to correct sha: {repo_sha.decode('utf-8', errors='replace')}"
-                )
+        if sha and not repo_sha.startswith(sha.encode("utf-8")):
+            shutil.rmtree(repo_destination)
+            raise GitError(
+                f"Github repo is broken (not set to correct sha: {repo_sha.decode('utf-8', errors='replace')}"
+            )
 
     return repo_destination
 

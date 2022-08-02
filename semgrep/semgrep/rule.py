@@ -67,7 +67,7 @@ class Rule:
         }
 
         # add typescript to languages if the rule supports javascript.
-        if any(language == Language.JAVASCRIPT for language in rule_languages):
+        if Language.JAVASCRIPT in rule_languages:
             rule_languages.add(Language.TYPESCRIPT)
 
         self._languages = sorted(rule_languages, key=lambda lang: lang.value)  # type: ignore
@@ -79,10 +79,7 @@ class Rule:
             self._validate_none_language_rule()
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, type(self)):
-            return False
-
-        return self._raw == other._raw
+        return self._raw == other._raw if isinstance(other, type(self)) else False
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -138,11 +135,12 @@ class Rule:
                 doc = self._yaml.value.get(span_key)
                 span = doc.span if doc else self._yaml.span
                 raise InvalidRuleSchemaError(
-                    short_msg=f"invalid pattern clause",
+                    short_msg="invalid pattern clause",
                     long_msg=f"invalid pattern clause '{operator_key}' with regex-only rules",
                     spans=[span],
-                    help=f"use only patterns, pattern-either, pattern-regex, or pattern-not-regex with regex-only rules",
+                    help="use only patterns, pattern-either, pattern-regex, or pattern-not-regex with regex-only rules",
                 )
+
             if expression.children:
                 for child in expression.children:
                     _validate(child, span_key)
@@ -235,24 +233,21 @@ class Rule:
         rule_id = PatternId(_rule_id)
 
         for pattern_name in pattern_names_for_operator(OPERATORS.AND):
-            pattern = rule_raw.get(pattern_name)
-            if pattern:
+            if pattern := rule_raw.get(pattern_name):
                 self._pattern_spans[rule_id] = pattern.span
                 return BooleanRuleExpression(
                     OPERATORS.AND, rule_id, None, pattern.value
                 )
 
         for pattern_name in pattern_names_for_operator(OPERATORS.REGEX):
-            pattern = rule_raw.get(pattern_name)
-            if pattern:
+            if pattern := rule_raw.get(pattern_name):
                 self._pattern_spans[rule_id] = pattern.span
                 return BooleanRuleExpression(
                     OPERATORS.REGEX, rule_id, None, pattern.value
                 )
 
         for pattern_name in pattern_names_for_operator(OPERATORS.AND_ALL):
-            patterns = rule_raw.get(pattern_name)
-            if patterns:
+            if patterns := rule_raw.get(pattern_name):
                 return BooleanRuleExpression(
                     operator=OPERATORS.AND_ALL,
                     pattern_id=None,
@@ -261,8 +256,7 @@ class Rule:
                 )
 
         for pattern_name in pattern_names_for_operator(OPERATORS.AND_EITHER):
-            patterns = rule_raw.get(pattern_name)
-            if patterns:
+            if patterns := rule_raw.get(pattern_name):
                 return BooleanRuleExpression(
                     operator=OPERATORS.AND_EITHER,
                     pattern_id=None,

@@ -13,7 +13,7 @@ def report_summary_stat() -> str:
     # mobj = patt.match("Coverage: 4/4 (4.4%)")
     mobj = patt.match(stat)
     if mobj is not None:
-        return mobj.group(1)
+        return mobj[1]
     raise Exception("")
 
 
@@ -23,7 +23,7 @@ def report_summary_for_file_stat(file: str) -> str:
     for line in stat:
         mobj = patt.match(line)
         if mobj is not None:
-            return mobj.group(1)
+            return mobj[1]
     raise Exception("")
 
 

@@ -57,16 +57,13 @@ class RepositoryTimePerRule:
     def times_per_file_to_times_per_rule(
         self, repo_name: str, times_per_file: dict
     ) -> None:
-        if not "time" in times_per_file:
+        if "time" not in times_per_file:
             logger.error(
                 "Semgrep-core ran without the --time flag, please try again with --time set to true."
             )
             sys.exit(1)
 
-        rule_ids = []
-        for rule_id in times_per_file["time"]["rules"]:
-            rule_ids.append(rule_id["id"])
-
+        rule_ids = [rule_id["id"] for rule_id in times_per_file["time"]["rules"]]
         # this is for repo -> rule_id -> time
         total_time_per_rule: List[float] = [0.0] * len(rule_ids)
 

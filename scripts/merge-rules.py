@@ -27,9 +27,8 @@ def mergeRules(rulefilelist, outputfile):
         rulefile["rules"] += rulefileyaml["rules"]
     rulecount = len(rulefile["rules"])
     print(f"Created {rulecount} rules")
-    output = open(outputfile, "w")
-    yaml.dump(rulefile, output)
-    output.close()
+    with open(outputfile, "w") as output:
+        yaml.dump(rulefile, output)
 
 
 if __name__ == "__main__":

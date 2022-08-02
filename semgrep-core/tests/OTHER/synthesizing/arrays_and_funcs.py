@@ -10,7 +10,7 @@ def foo():
    A[1:4:-1]
    A[::-1]
    A[1:]
-   if 1 == 1: foo()
+   foo()
    true
    3.3
    self.data

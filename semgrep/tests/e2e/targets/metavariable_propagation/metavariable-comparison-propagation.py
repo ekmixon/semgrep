@@ -1,14 +1,11 @@
 def foo():
-    a = 1
     b = 10
-    return a
+    return 1
 
 def bar():
-    a = 2
     b = 10
-    return a
+    return 2
 
 def baz():
-    a = 3
     b = 10
-    return a
+    return 3

@@ -186,24 +186,21 @@ class OldCoreRunner:
                     pattern=error_json.get("pattern", "<no pattern>"),
                     language=error_json.get("language", "<no language>"),
                 )
-            else:
-                matching_pattern = next(
-                    (p for p in patterns if p._id == error_json["pattern_id"]), None
+            matching_pattern = next(
+                (p for p in patterns if p._id == error_json["pattern_id"]), None
+            )
+            if matching_pattern is None or matching_pattern.span is None:
+                raise SemgrepError(
+                    f"Pattern id from semgrep-core was missing in pattern spans. {PLEASE_FILE_ISSUE_TEXT}"
                 )
-                if matching_pattern is None or matching_pattern.span is None:
-                    raise SemgrepError(
-                        f"Pattern id from semgrep-core was missing in pattern spans. {PLEASE_FILE_ISSUE_TEXT}"
-                    )
-                matching_span = matching_pattern.span
+            matching_span = matching_pattern.span
 
-                raise InvalidPatternError(
-                    short_msg=error_type,
-                    long_msg=f"Pattern could not be parsed as a {error_json['language']} semgrep pattern",
-                    spans=[matching_span],
-                    help=None,
-                )
-        # no special formatting ought to be required for the other types; the semgrep python should be performing
-        # validation for them. So if any other type of error occurs, ask the user to file an issue
+            raise InvalidPatternError(
+                short_msg=error_type,
+                long_msg=f"Pattern could not be parsed as a {error_json['language']} semgrep pattern",
+                spans=[matching_span],
+                help=None,
+            )
         else:
             raise SemgrepError(
                 f"an internal error occured while invoking semgrep-core while running rule '{rule.id}'. Consider skipping this rule and reporting this issue.\n\t{error_type}: {error_json.get('message', 'no message')}\n{PLEASE_FILE_ISSUE_TEXT}"
@@ -228,12 +225,12 @@ class OldCoreRunner:
         cache_dir: str,
     ) -> dict:
         with tempfile.NamedTemporaryFile(
-            "w", suffix=".yaml"
-        ) as pattern_file, tempfile.NamedTemporaryFile(
-            "w"
-        ) as target_file, tempfile.NamedTemporaryFile(
-            "w"
-        ) as equiv_file:
+                "w", suffix=".yaml"
+            ) as pattern_file, tempfile.NamedTemporaryFile(
+                "w"
+            ) as target_file, tempfile.NamedTemporaryFile(
+                "w"
+            ) as equiv_file:
             yaml = YAML()
             yaml.dump({"rules": patterns_json}, pattern_file)
             pattern_file.flush()
@@ -259,8 +256,7 @@ class OldCoreRunner:
                 "-json_time",
             ]
 
-            equivalences = rule.equivalences
-            if equivalences:
+            if equivalences := rule.equivalences:
                 self._write_equivalences_file(equiv_file, equivalences)
                 cmd += [
                     "-equivalences",
@@ -271,8 +267,7 @@ class OldCoreRunner:
                 cmd += ["-debug"]
 
             core_run = sub_run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output_json = self._extract_core_output(rule, patterns, core_run)
-            return output_json
+            return self._extract_core_output(rule, patterns, core_run)
 
     def _extract_core_output(
         self, rule: Rule, patterns: List[Pattern], core_run: subprocess.CompletedProcess
@@ -438,10 +433,11 @@ class OldCoreRunner:
                 # performed purely in Python code then compared against
                 # semgrep-core's results for other patterns.
                 patterns_regex, patterns = partition(
-                    lambda p: p.expression.operator == OPERATORS.REGEX
-                    or p.expression.operator == OPERATORS.NOT_REGEX,
+                    lambda p: p.expression.operator
+                    in [OPERATORS.REGEX, OPERATORS.NOT_REGEX],
                     all_patterns_for_language,
                 )
+
                 if patterns_regex:
                     self.handle_regex_patterns(outputs, patterns_regex, targets)
 
@@ -450,13 +446,12 @@ class OldCoreRunner:
                 if language == Language.REGEX:
                     continue
 
-                # metatavarible-pattern is only available via --optimizations
-                metavariable_patterns = [
+                if metavariable_patterns := [
                     pattern
                     for pattern in patterns
-                    if pattern.expression.operator == OPERATORS.METAVARIABLE_PATTERN
-                ]
-                if len(metavariable_patterns) > 0:
+                    if pattern.expression.operator
+                    == OPERATORS.METAVARIABLE_PATTERN
+                ]:
                     raise SemgrepError(
                         "Operator metavariable-pattern is only supported by semgrep-core"
                     )

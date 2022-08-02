@@ -1,9 +1,6 @@
 def foo():
-    x = 'test string format {}'.format('foo')
+    x = 'test string format foo'
     a = source1()
-    if True:
-        b = a
-        b = sanitize1()
-    else:
-        b = a
+    b = a
+    b = sanitize1()
     sink1(b)

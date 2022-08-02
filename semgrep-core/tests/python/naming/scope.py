@@ -4,14 +4,11 @@ from foo import imported
 global_ = "global"
 
 def foo(param1, param2):
-  local = "local"
   # actually a new local!
   global_ = "local"
   # actually not a new local but imported one?
   imported = "imported"
-  return local
-  return param1
-  return imported
+  return "local"
 
 
 def foo2():

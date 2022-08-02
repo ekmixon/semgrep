@@ -31,17 +31,13 @@ def url_validation(request):
     next = request.POST.get('next', request.GET.get('next'))
     if (next or not request.is_ajax()) and not is_safe_url(url=next, allowed_hosts=request.get_host()):
         next = "/index"
-    #OK:
-    response = HttpResponseRedirect(next) if next else HttpResponse(status=204)
-    return response
+    return HttpResponseRedirect(next) if next else HttpResponse(status=204)
 
 def url_validation2(request):
     next = request.POST.get('next', request.GET.get('next'))
-    ok = is_safe_url(url=next, allowed_hosts=request.get_host())
-    if ok:
+    if ok := is_safe_url(url=next, allowed_hosts=request.get_host()):
         #OK:
-        response = HttpResponseRedirect(next) if next else HttpResponse(status=204)
+        return HttpResponseRedirect(next) if next else HttpResponse(status=204)
     else:
         #OK:
-        response = HttpResponseRedirect("index")
-    return response
+        return HttpResponseRedirect("index")

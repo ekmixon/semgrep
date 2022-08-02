@@ -117,32 +117,32 @@ class _MetricManager:
         """
         Store rule hashes, rule parse times, and file-stats
         """
-        rule_stats = []
-        for rule in rules:
-            rule_stats.append(
-                {
-                    "ruleHash": rule.full_hash,
-                    "parseTime": profiling_data.get_rule_parse_time(rule),
-                    "matchTime": profiling_data.get_rule_match_time(rule),
-                    "runTime": profiling_data.get_rule_run_time(rule),
-                    "bytesScanned": profiling_data.get_rule_bytes_scanned(rule),
-                }
-            )
+        rule_stats = [
+            {
+                "ruleHash": rule.full_hash,
+                "parseTime": profiling_data.get_rule_parse_time(rule),
+                "matchTime": profiling_data.get_rule_match_time(rule),
+                "runTime": profiling_data.get_rule_run_time(rule),
+                "bytesScanned": profiling_data.get_rule_bytes_scanned(rule),
+            }
+            for rule in rules
+        ]
+
         self._rule_stats = rule_stats
 
-        file_stats = []
-        for target in targets:
-            file_stats.append(
-                {
-                    "size": target.stat().st_size,
-                    "numTimesScanned": profiling_data.get_file_num_times_scanned(
-                        target
-                    ),
-                    "parseTime": profiling_data.get_file_parse_time(target),
-                    "matchTime": profiling_data.get_file_match_time(target),
-                    "runTime": profiling_data.get_file_run_time(target),
-                }
-            )
+        file_stats = [
+            {
+                "size": target.stat().st_size,
+                "numTimesScanned": profiling_data.get_file_num_times_scanned(
+                    target
+                ),
+                "parseTime": profiling_data.get_file_parse_time(target),
+                "matchTime": profiling_data.get_file_match_time(target),
+                "runTime": profiling_data.get_file_run_time(target),
+            }
+            for target in targets
+        ]
+
         self._file_stats = file_stats
 
     def as_dict(self) -> Dict[str, Any]:

@@ -99,11 +99,12 @@ class TestSuite:
         """
 
         # build the test suite element
-        test_suite_attributes = dict()
+        test_suite_attributes = {}
         if any(c.assertions for c in self.test_cases):
             test_suite_attributes["assertions"] = str(
-                sum([int(c.assertions) for c in self.test_cases if c.assertions])
+                sum(int(c.assertions) for c in self.test_cases if c.assertions)
             )
+
         test_suite_attributes["disabled"] = str(
             len([c for c in self.test_cases if not c.is_enabled])
         )
@@ -158,8 +159,7 @@ class TestSuite:
 
         # test cases
         for case in self.test_cases:
-            test_case_attributes = dict()
-            test_case_attributes["name"] = str(case.name)
+            test_case_attributes = {"name": str(case.name)}
             if case.assertions:
                 # Number of assertions in the test case
                 test_case_attributes["assertions"] = "%d" % case.assertions
@@ -306,12 +306,13 @@ def _clean_illegal_xml_chars(string_to_clean):
     ]
 
     illegal_ranges = [
-        "%s-%s" % (chr(low), chr(high))
+        f"{chr(low)}-{chr(high)}"
         for (low, high) in illegal_unichrs
         if low < sys.maxunicode
     ]
 
-    illegal_xml_re = re.compile("[%s]" % "".join(illegal_ranges))
+
+    illegal_xml_re = re.compile(f'[{"".join(illegal_ranges)}]')
     return illegal_xml_re.sub("", string_to_clean)
 
 
@@ -357,16 +358,15 @@ class TestCase:
 
     def add_error_info(self, message=None, output=None, error_type=None):
         """Adds an error message, output, or both to the test case"""
-        error = {}
-        error["message"] = message
-        error["output"] = output
-        error["type"] = error_type
-        if self.allow_multiple_subalements:
-            if message or output:
-                self.errors.append(error)
-        elif not len(self.errors):
+        error = {"message": message, "output": output, "type": error_type}
+        if (
+            self.allow_multiple_subalements
+            and (message or output)
+            or not self.allow_multiple_subalements
+            and not len(self.errors)
+        ):
             self.errors.append(error)
-        else:
+        elif not self.allow_multiple_subalements:
             if message:
                 self.errors[0]["message"] = message
             if output:
@@ -376,16 +376,15 @@ class TestCase:
 
     def add_failure_info(self, message=None, output=None, failure_type=None):
         """Adds a failure message, output, or both to the test case"""
-        failure = {}
-        failure["message"] = message
-        failure["output"] = output
-        failure["type"] = failure_type
-        if self.allow_multiple_subalements:
-            if message or output:
-                self.failures.append(failure)
-        elif not len(self.failures):
+        failure = {"message": message, "output": output, "type": failure_type}
+        if (
+            self.allow_multiple_subalements
+            and (message or output)
+            or not self.allow_multiple_subalements
+            and not len(self.failures)
+        ):
             self.failures.append(failure)
-        else:
+        elif not self.allow_multiple_subalements:
             if message:
                 self.failures[0]["message"] = message
             if output:
@@ -395,15 +394,15 @@ class TestCase:
 
     def add_skipped_info(self, message=None, output=None):
         """Adds a skipped message, output, or both to the test case"""
-        skipped = {}
-        skipped["message"] = message
-        skipped["output"] = output
-        if self.allow_multiple_subalements:
-            if message or output:
-                self.skipped.append(skipped)
-        elif not len(self.skipped):
+        skipped = {"message": message, "output": output}
+        if (
+            self.allow_multiple_subalements
+            and (message or output)
+            or not self.allow_multiple_subalements
+            and not len(self.skipped)
+        ):
             self.skipped.append(skipped)
-        else:
+        elif not self.allow_multiple_subalements:
             if message:
                 self.skipped[0]["message"] = message
             if output:

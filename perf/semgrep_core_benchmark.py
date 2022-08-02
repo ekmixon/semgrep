@@ -95,13 +95,14 @@ def run_semgrep_core(corpus: Corpus, variant: SemgrepVariant) -> float:
         "-config",
         os.path.abspath(corpus.rule_dir) or "",
         os.path.abspath(corpus.target_dir) or "",
+        *common_args,
     ]
-    args.extend(common_args)
+
     if variant.semgrep_core_extra != "":
         args.extend(variant.semgrep_core_extra.split(" "))
 
     print(f"current directory: {os.getcwd()}")
-    print("semgrep-core command: {}".format(" ".join(args)))
+    print(f'semgrep-core command: {" ".join(args)}')
 
     t1 = time.time()
     res = subprocess.run(args)  # nosem
@@ -121,9 +122,7 @@ def run_semgrep_core(corpus: Corpus, variant: SemgrepVariant) -> float:
 
 def run_benchmarks(dummy: bool, upload: bool) -> None:
     results = []
-    corpuses = SEMGREP_CORE_CORPUSES
-    if dummy:
-        corpuses = DUMMY_CORPUSES
+    corpuses = DUMMY_CORPUSES if dummy else SEMGREP_CORE_CORPUSES
     for corpus in corpuses:
         with chdir(corpus.name):
             corpus.prep()

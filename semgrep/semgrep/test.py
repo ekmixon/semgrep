@@ -78,23 +78,19 @@ def compute_confusion_matrix(
 
 
 def _test_compute_confusion_matrix() -> None:
-    tp, tn, fp, fn = compute_confusion_matrix(set([1, 2, 3, 4]), set([1]), set())
+    tp, tn, fp, fn = compute_confusion_matrix({1, 2, 3, 4}, {1}, set())
     assert tp == 1
     assert tn == 0
     assert fp == 3
     assert fn == 0
 
-    tp, tn, fp, fn = compute_confusion_matrix(
-        set([1, 2, 3, 4]), set([1, 2, 3, 4]), set([1])
-    )
+    tp, tn, fp, fn = compute_confusion_matrix({1, 2, 3, 4}, {1, 2, 3, 4}, {1})
     assert tp == 4
     assert tn == 1
     assert fp == 0
     assert fn == 0
 
-    tp, tn, fp, fn = compute_confusion_matrix(
-        set([2, 3]), set([1, 2, 3, 4]), set([7, 8])
-    )
+    tp, tn, fp, fn = compute_confusion_matrix({2, 3}, {1, 2, 3, 4}, {7, 8})
     assert tp == 2
     assert tn == 2
     assert fp == 0

@@ -52,11 +52,11 @@ def notify_user_of_work(
     - which dirs are excluded, etc.
     """
     if include:
-        logger.info(f"including files:")
+        logger.info("including files:")
         for inc in include:
             logger.info(f"- {inc}")
     if exclude:
-        logger.info(f"excluding files:")
+        logger.info("excluding files:")
         for exc in exclude:
             logger.info(f"- {exc}")
     logger.info(f"running {len(filtered_rules)} rules...")
@@ -143,13 +143,11 @@ def invoke_semgrep(
     )
     output_handler.close()
 
-    result: Union[Dict[str, Any], str] = (
+    return (
         json.loads(io_capture.getvalue())
         if output_settings.output_format.is_json()
         else io_capture.getvalue()
     )
-
-    return result
 
 
 def main(
@@ -371,7 +369,7 @@ The two most popular are:
         metric_manager.set_run_time(profiler.calls["total_time"][0])
         total_bytes_scanned = sum(t.stat().st_size for t in all_targets)
         metric_manager.set_total_bytes_scanned(total_bytes_scanned)
-        metric_manager.set_errors(list(type(e).__name__ for e in semgrep_errors))
+        metric_manager.set_errors([type(e).__name__ for e in semgrep_errors])
         metric_manager.set_run_timings(
             profiling_data, list(all_targets), filtered_rules
         )

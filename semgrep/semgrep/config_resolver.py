@@ -89,7 +89,7 @@ class Config:
 
         if not configs:
             try:
-                config_dict.update(load_default_config())
+                config_dict |= load_default_config()
             except SemgrepError as e:
                 errors.append(e)
 
@@ -105,10 +105,9 @@ class Config:
                     resolved_config_key,
                     resolved_config_yaml_tree,
                 ) in resolved_config.items():
-                    patched_resolved_config: Dict[str, YamlTree] = {}
-                    patched_resolved_config[
-                        f"{resolved_config_key}_{i}"
-                    ] = resolved_config_yaml_tree
+                    patched_resolved_config: Dict[str, YamlTree] = {
+                        f"{resolved_config_key}_{i}": resolved_config_yaml_tree
+                    }
 
                     config_dict.update(patched_resolved_config)
             except SemgrepError as e:
@@ -276,10 +275,7 @@ def parse_config_at_path(
     """
     Assumes file at loc exists
     """
-    config_id = str(loc)
-    if base_path:
-        config_id = str(loc).replace(str(base_path), "")
-
+    config_id = str(loc).replace(str(base_path), "") if base_path else str(loc)
     with loc.open() as f:
         return parse_config_string(config_id, f.read(), str(loc))
 
@@ -307,9 +303,12 @@ def parse_config_folder(loc: Path, relative: bool = False) -> Dict[str, YamlTree
     for l in loc.rglob("*"):
         # Allow manually specified paths with ".", but don't auto-expand them
         correct_suffix = is_config_suffix(l)
-        if not _is_hidden_config(l.relative_to(loc)) and correct_suffix:
-            if l.is_file():
-                configs.update(parse_config_at_path(l, loc if relative else None))
+        if (
+            not _is_hidden_config(l.relative_to(loc))
+            and correct_suffix
+            and l.is_file()
+        ):
+            configs |= parse_config_at_path(l, loc if relative else None)
     return configs
 
 
@@ -382,7 +381,7 @@ def nice_semgrep_url(url: str) -> str:
 def download_config(config_url: str) -> Dict[str, YamlTree]:
     import requests  # here for faster startup times
 
-    DOWNLOADING_MESSAGE = f"downloading config..."
+    DOWNLOADING_MESSAGE = "downloading config..."
     logger.debug(f"trying to download from {config_url}")
     logger.info(
         f"using config from {nice_semgrep_url(config_url)}. Visit https://semgrep.dev/registry to see all public rules."
@@ -392,28 +391,27 @@ def download_config(config_url: str) -> Dict[str, YamlTree]:
 
     try:
         r = requests.get(config_url, stream=True, headers=headers, timeout=20)
-        if r.status_code == requests.codes.ok:
-            content_type = r.headers.get("Content-Type")
-            yaml_types = [
-                "text/plain",
-                "application/x-yaml",
-                "text/x-yaml",
-                "text/yaml",
-                "text/vnd.yaml",
-            ]
-            if content_type and any((ct in content_type for ct in yaml_types)):
-                return parse_config_string(
-                    "remote-url",
-                    r.content.decode("utf-8", errors="replace"),
-                    filename=f"{config_url[:20]}...",
-                )
-            else:
-                raise SemgrepError(
-                    f"unknown content-type: {content_type} returned by config url: {config_url}. Can not parse"
-                )
-        else:
+        if r.status_code != requests.codes.ok:
             raise SemgrepError(
                 f"bad status code: {r.status_code} returned by config url: {config_url}"
+            )
+        content_type = r.headers.get("Content-Type")
+        yaml_types = [
+            "text/plain",
+            "application/x-yaml",
+            "text/x-yaml",
+            "text/yaml",
+            "text/vnd.yaml",
+        ]
+        if content_type and any((ct in content_type for ct in yaml_types)):
+            return parse_config_string(
+                "remote-url",
+                r.content.decode("utf-8", errors="replace"),
+                filename=f"{config_url[:20]}...",
+            )
+        else:
+            raise SemgrepError(
+                f"unknown content-type: {content_type} returned by config url: {config_url}. Can not parse"
             )
     except Exception as e:
         raise SemgrepError(f"Failed to download config from {config_url}: {str(e)}")

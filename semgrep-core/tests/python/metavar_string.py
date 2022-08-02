@@ -6,7 +6,7 @@ def test():
     #ERROR: match
     foo("\"escaped string\"")
     #ERROR: match
-    foo(f"an fstring")
+    foo("an fstring")
     #ERROR: match
     foo("""a multiline string""")
 

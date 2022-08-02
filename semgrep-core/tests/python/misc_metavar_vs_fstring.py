@@ -1,2 +1,2 @@
 #ERROR: match
-f"boo"
+"boo"

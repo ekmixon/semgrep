@@ -29,10 +29,9 @@ def evaluate_expression(
 ) -> Set[Range]:
     # convert it to an implicit and
     e = BooleanRuleExpression(OPERATORS.AND_ALL, None, exprs, None)
-    result: Set[Range] = raw_evaluate_expression(
+    return raw_evaluate_expression(
         e, pattern_ids_to_pattern_matches, [], allow_exec=allow_exec
     )
-    return result
 
 
 def PatternMatchMock(
@@ -94,7 +93,7 @@ def testA() -> None:
         RuleExpr(OPERATORS.AND, "pattern2"),
     ]
     result = evaluate_expression(expression, results)
-    assert result == set([Range(0, 100, {})]), f"{result}"
+    assert result == {Range(0, 100, {})}, f"{result}"
 
 
 def testB() -> None:
@@ -131,7 +130,7 @@ def testB() -> None:
         ),
     ]
     result = evaluate_expression(expression, results)
-    assert result == set([Range(30, 70, {})]), f"{result}"
+    assert result == {Range(30, 70, {})}, f"{result}"
 
 
 def testC() -> None:
@@ -166,7 +165,7 @@ def testC() -> None:
         RuleExpr(OPERATORS.AND, "pattern2"),
     ]
     result = evaluate_expression(expression, results)
-    assert result == set([Range(200, 300, {})]), f"{result}"
+    assert result == {Range(200, 300, {})}, f"{result}"
 
 
 def testD() -> None:
@@ -242,7 +241,7 @@ def testE() -> None:
         RuleExpr(OPERATORS.AND, "pattern1"),
     ]
     result = evaluate_expression(expression, results)
-    assert result == set([Range(300, 400, {}), Range(350, 400, {})]), f"{result}"
+    assert result == {Range(300, 400, {}), Range(350, 400, {})}, f"{result}"
 
     """
         and-inside P2
@@ -256,7 +255,7 @@ def testE() -> None:
         RuleExpr(OPERATORS.AND, "pattern1"),
     ]
     result = evaluate_expression(expression, results)
-    assert result == set([Range(100, 200, {})]), f"{result}"
+    assert result == {Range(100, 200, {})}, f"{result}"
 
     """
         and-inside P1
@@ -264,14 +263,13 @@ def testE() -> None:
     """
     expression = [RuleExpr(OPERATORS.AND_INSIDE, "pattern1")]
     result = evaluate_expression(expression, results)
-    assert result == set(
-        [
-            Range(100, 200, {}),
-            Range(300, 400, {}),
-            Range(350, 400, {}),
-            Range(500, 600, {}),
-        ]
-    ), f"{result}"
+    assert result == {
+        Range(100, 200, {}),
+        Range(300, 400, {}),
+        Range(350, 400, {}),
+        Range(500, 600, {}),
+    }, f"{result}"
+
 
     """
         and-inside-noteq P1
@@ -357,9 +355,11 @@ def testF() -> None:
         ),
     ]
     result = evaluate_expression(expression, results)
-    assert result == set(
-        [Range(100, 200, {}), Range(500, 600, {}), Range(700, 800, {})]
-    ), f"{result}"
+    assert result == {
+        Range(100, 200, {}),
+        Range(500, 600, {}),
+        Range(700, 800, {}),
+    }, f"{result}"
 
     # TODO test and-all (`patterns` subkey)
 
@@ -496,7 +496,7 @@ def test_evaluate_python() -> None:
     ]
 
     result = evaluate_expression(expression, results, allow_exec=True)
-    assert result == set([Range(400, 500, {})]), f"{result}"
+    assert result == {Range(400, 500, {})}, f"{result}"
 
 
 def test_evaluate_python_exec_false() -> None:

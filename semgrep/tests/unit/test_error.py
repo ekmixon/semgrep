@@ -35,8 +35,7 @@ def test_different_hash():
 
     assert error_1.__hash__() != error_2.__hash__()
 
-    errors = set()
-    errors.add(error_1)
+    errors = {error_1}
     assert error_2 not in errors
 
 
@@ -58,8 +57,7 @@ def test_same_hash():
 
     assert error_1.__hash__() == error_2.__hash__()
 
-    errors = set()
-    errors.add(error_1)
+    errors = {error_1}
     assert error_2 in errors
 
 

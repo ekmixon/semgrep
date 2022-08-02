@@ -84,20 +84,20 @@ def _build_time_json(
     the target file will become negligible once we run many rules on the
     same AST.
     """
-    time_info: Dict[str, Any] = {}
-    # this list of all rules names is given here so they don't have to be
-    # repeated for each target in the 'targets' field, saving space.
-    time_info["rules"] = [{"id": rule.id} for rule in rules]
-    time_info["rule_parse_info"] = [
-        profiling_data.get_rule_parse_time(rule) for rule in rules
-    ]
+    time_info: Dict[str, Any] = {
+        "rules": [{"id": rule.id} for rule in rules],
+        "rule_parse_info": [
+            profiling_data.get_rule_parse_time(rule) for rule in rules
+        ],
+    }
+
     time_info["total_time"] = profiler.calls["total_time"][0] if profiler else -1.0
     target_bytes = [Path(str(target)).resolve().stat().st_size for target in targets]
     time_info["targets"] = [
         _build_time_target_json(rules, target, num_bytes, profiling_data)
         for target, num_bytes in zip(targets, target_bytes)
     ]
-    time_info["total_bytes"] = sum(n for n in target_bytes)
+    time_info["total_bytes"] = sum(target_bytes)
     return time_info
 
 
@@ -189,7 +189,7 @@ class OutputHandler:
         self.has_output = True
         separator = ", "
         print_threshold_hint = False
-        for path in errors.keys():
+        for path in errors:
             num_errs = len(errors[path])
             errors[path].sort()
             error_msg = f"Warning: {num_errs} timeout error(s) in {path} when running the following rules: [{separator.join(errors[path])}]"
@@ -204,7 +204,7 @@ class OutputHandler:
             logger.error(
                 with_color(
                     colorama.Fore.RED,
-                    f"You can use the `--timeout-threshold` flag to set a number of timeouts after which a file will be skipped.",
+                    "You can use the `--timeout-threshold` flag to set a number of timeouts after which a file will be skipped.",
                 )
             )
 
@@ -258,17 +258,17 @@ class OutputHandler:
     def final_raise(self, ex: Optional[Exception], error_stats: Optional[str]) -> None:
         if ex is None:
             return
-        if isinstance(ex, SemgrepError):
-            if ex.level == Level.ERROR:
-                raise ex
-            else:
-                if self.settings.strict:
-                    raise ex
-                logger.info(
-                    f"{error_stats}; run with --verbose for details or run with --strict to exit non-zero if any file cannot be analyzed"
-                )
-        else:
+        if (
+            isinstance(ex, SemgrepError)
+            and ex.level == Level.ERROR
+            or not isinstance(ex, SemgrepError)
+        ):
             raise ex
+        if self.settings.strict:
+            raise ex
+        logger.info(
+            f"{error_stats}; run with --verbose for details or run with --strict to exit non-zero if any file cannot be analyzed"
+        )
 
     def close(self) -> None:
         """

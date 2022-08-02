@@ -14,7 +14,7 @@ def send_comment(message: str, github_token: str, pull_request_number: str) -> N
 
     If pull_request_number is "" then does nothing
     """
-    if pull_request_number == "":
+    if not pull_request_number:
         return
 
     session = requests.Session()

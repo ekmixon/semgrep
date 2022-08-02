@@ -12,17 +12,13 @@ def bar():
         return 0
     if 1 + 2 == 1 + 2:
         return 1
-    if 1 + 2 == 1 + 2:
-        foo()
     if x == x:
         foo()
         bar()
-    if True:
-        foo()
     foo()
-    if True:
-        foo()
-        foo()
+    foo()
+    foo()
+    foo()
 
 
 def funcs():
@@ -32,16 +28,14 @@ def funcs():
 
 
 def cond():
-    if True:
-        bar()
+    bar()
     return False
 
 
 def stupid_if():
     if foo() > 2:
         foo()
-        bar()
     else:
         foo()
-        # comment between
-        bar()
+
+    bar()

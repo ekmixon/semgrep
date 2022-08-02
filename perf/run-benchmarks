@@ -224,15 +224,16 @@ def run_semgrep(
             "docker",
             "run",
             "-v",
-            os.path.abspath(corpus.rule_dir) + ":/rules",
+            f"{os.path.abspath(corpus.rule_dir)}:/rules",
             "-v",
-            os.path.abspath(corpus.target_dir) + ":/targets",
+            f"{os.path.abspath(corpus.target_dir)}:/targets",
             "-t",
             docker,
             "--config",
             "/rules",
             "/targets",
         ]
+
     else:
         # Absolute paths for rules and targets are required by semgrep
         # when running within the semgrep docker container.
@@ -251,7 +252,7 @@ def run_semgrep(
     args.append(os.path.abspath(corpus.target_dir))
 
     print(f"current directory: {os.getcwd()}")
-    print("semgrep command: {}".format(" ".join(args)))
+    print(f'semgrep command: {" ".join(args)}')
     os.environ["SEMGREP_CORE_EXTRA"] = variant.semgrep_core_extra
     print(f"extra arguments for semgrep-core: '{variant.semgrep_core_extra}'")
 
@@ -293,7 +294,7 @@ def prepare_rule_cache_for_this_run(
     logger.info(
         f"Rule cache for run {setup_data.run_name} created at {rule_cache_for_this_run}"
     )
-    rule_config_paths = list()
+    rule_config_paths = []
     for rule_config in setup_data.rule_configs:
         logger.info(f"Checking for rule config '{rule_config}' in cache")
         normalized_rule_config = rule_config.normalize_rule_config_name()
@@ -322,7 +323,7 @@ def prepare_benchmark_run(
     - downloads rule configs from an endpoint if necessary
     - generates a 'prep' file which clones a repo from a URL and checks out the commit
     """
-    corpuses: List[Corpus] = list()
+    corpuses: List[Corpus] = []
     for setup_data in benchmark_config.benchmark_setup_data:
         logger.info(f"Setting up benchmark run for run '{setup_data.run_name}'")
         rule_cache_dir, _ = prepare_rule_cache_for_this_run(setup_data, clean)
@@ -460,7 +461,7 @@ def run_benchmarks(
                     )
                     continue
 
-                if not output_time_per_rule_json is None:
+                if output_time_per_rule_json is not None:
                     output_per_rule_json_results.times_per_file_to_times_per_rule(
                         corpus.name, semgrep_results
                     )
@@ -499,10 +500,8 @@ def run_benchmarks(
 
     if summary_file_path:
         with chdir(called_dir):
-            summary_file = open(summary_file_path, "w+")
-            summary_file.write(durations)
-            summary_file.close()
-
+            with open(summary_file_path, "w+") as summary_file:
+                summary_file.write(durations)
     if plot_benchmarks:
         import matplotlib.pyplot as plt
         import pandas as pd
@@ -512,7 +511,7 @@ def run_benchmarks(
         plotdata.plot(kind="bar")
         plt.show()
 
-    if not output_time_per_rule_json is None:
+    if output_time_per_rule_json is not None:
         with chdir(called_dir):
             output_per_rule_json_results.print_repo_to_times_per_rule()
 
@@ -612,7 +611,7 @@ def main() -> None:
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     called_dir = os.getcwd()
 
-    with chdir(cur_dir + "/bench"):
+    with chdir(f"{cur_dir}/bench"):
         if args.semgrep_core:
             semgrep_core_benchmark.run_benchmarks(args.dummy, args.upload)
         else:

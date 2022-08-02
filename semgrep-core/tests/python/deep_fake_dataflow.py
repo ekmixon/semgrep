@@ -3,6 +3,5 @@ def foo():
   #ERROR: match
   x = requests.get("foo")
   bar()
-  if True:
-    render(o.format(x))
+  render(o.format(x))
 

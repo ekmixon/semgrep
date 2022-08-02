@@ -246,7 +246,7 @@ class YamlTree(Generic[T]):
             return {str(k.unroll()): v.unroll() for k, v in self.value.items()}
         elif isinstance(self.value, YamlTree):
             return self.value.unroll()
-        elif isinstance(self.value, str) or isinstance(self.value, int):
+        elif isinstance(self.value, (str, int)):
             return self.value
         else:
             raise ValueError(
@@ -311,8 +311,7 @@ class YamlMap:
             return False
 
     def get(self, key: str) -> Optional[YamlTree]:
-        match = [v for k, v in self._internal.items() if k.value == key]
-        if match:
+        if match := [v for k, v in self._internal.items() if k.value == key]:
             return match[0]
         return None
 
@@ -330,7 +329,8 @@ def parse_yaml_preserve_spans(contents: str, filename: Optional[str]) -> YamlTre
 
     source_hash = SourceTracker.add_source(contents)
 
-    # this uses the `RoundTripConstructor` which inherits from `SafeConstructor`
+
+
     class SpanPreservingRuamelConstructor(RoundTripConstructor):
         def construct_object(self, node: Node, deep: bool = False) -> YamlTree:
             r = super().construct_object(node, deep)
@@ -345,8 +345,8 @@ def parse_yaml_preserve_spans(contents: str, filename: Optional[str]) -> YamlTre
             if isinstance(node, MappingNode):
                 from semgrep.error import InvalidRuleSchemaError
 
-                kv_pairs: List[Tuple[Node, Node]] = [t for t in node.value]
-                uniq_key_names: Set[str] = set(t[0].value for t in kv_pairs)
+                kv_pairs: List[Tuple[Node, Node]] = list(node.value)
+                uniq_key_names: Set[str] = {t[0].value for t in kv_pairs}
                 # If the number of unique key names is less than the number
                 # of key-value nodes, then there's a duplicate key
                 if len(uniq_key_names) < len(kv_pairs):
@@ -380,6 +380,7 @@ def parse_yaml_preserve_spans(contents: str, filename: Optional[str]) -> YamlTre
                 r, Span.from_node(node, source_hash=source_hash, filename=filename)
             )
 
+
     yaml = YAML()
     yaml.Constructor = SpanPreservingRuamelConstructor
     data = yaml.load(StringIO(contents))
@@ -408,7 +409,7 @@ class RuleValidation:
     BANNED_SENTINEL = "Additional properties are not allowed"
 
 
-def _validation_error_message(error: jsonschema.exceptions.ValidationError) -> str:  # type: ignore
+def _validation_error_message(error: jsonschema.exceptions.ValidationError) -> str:    # type: ignore
     """
     Heuristic that returns meaningful error messages in all examples from
     tests/e2e/rules/syntax/badXXX.yaml
@@ -437,8 +438,9 @@ def _validation_error_message(error: jsonschema.exceptions.ValidationError) -> s
                 invalid_keys.add(context.message)
         if context.message.startswith(RuleValidation.BANNED_SENTINEL):
             banned.add(context.message)
-        require_matches = RuleValidation.REQUIRE_REGEX.match(context.message)
-        if require_matches:
+        if require_matches := RuleValidation.REQUIRE_REGEX.match(
+            context.message
+        ):
             required.add(require_matches[1])
 
     if invalid_keys:
@@ -456,10 +458,7 @@ def _validation_error_message(error: jsonschema.exceptions.ValidationError) -> s
     if required:
         keys = ", ".join(f"'{k}'" for k in sorted(required))
         outs.append(f"One of these properties is missing: {keys}")
-    if outs:
-        return "\n".join(outs)
-
-    return cast(str, contexts[0].message)
+    return "\n".join(outs) if outs else cast(str, contexts[0].message)
 
 
 def validate_yaml(data: YamlTree) -> None:

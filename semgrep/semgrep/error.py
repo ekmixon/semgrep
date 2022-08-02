@@ -171,12 +171,11 @@ class ErrorWithSpan(SemgrepError):
         """
         # line numbers are 0 indexed
         width = ErrorWithSpan._line_number_width(span)
-        if line_number is not None:
-            base_str = str(line_number)
-            assert len(base_str) < width
-            return with_color(Fore.LIGHTBLUE_EX, base_str.ljust(width) + "| ")
-        else:
+        if line_number is None:
             return with_color(Fore.LIGHTBLUE_EX, "".ljust(width) + "| ")
+        base_str = str(line_number)
+        assert len(base_str) < width
+        return with_color(Fore.LIGHTBLUE_EX, f"{base_str.ljust(width)}| ")
 
     def _format_code_segment(
         self, start: Position, end: Position, source: List[str], part_of_span: Span
@@ -198,16 +197,19 @@ class ErrorWithSpan(SemgrepError):
         """
         # -1 because positions are 1-indexed
         code_segment = source[start.line - 1 : end.line]
-        snippet = []
-        for line_num, line in zip(range(start.line, end.line + 1), code_segment):
-            snippet.append(f"{self._format_line_number(part_of_span, line_num)}{line}")
-        return snippet
+        return [
+            f"{self._format_line_number(part_of_span, line_num)}{line}"
+            for line_num, line in zip(
+                range(start.line, end.line + 1), code_segment
+            )
+        ]
 
     def __str__(self) -> str:
         """
         Format this exception into a pretty string with context and color
         """
-        header = f"{with_color(Fore.RED, 'semgrep ' + self.level.name.lower())}: {self.short_msg}"
+        header = f"{with_color(Fore.RED, f'semgrep {self.level.name.lower()}')}: {self.short_msg}"
+
         snippets = []
         for span in self.spans:
             location_hint = f"  --> {span.file}:{span.start.line}"

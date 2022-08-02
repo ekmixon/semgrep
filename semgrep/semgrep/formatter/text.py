@@ -37,14 +37,15 @@ class TextFormatter(BaseFormatter):
         start_color = max(start_color - 1, 0)
         end_color = end_col if line_number >= end_line else len(line) + 1 + 1
         end_color = max(end_color - 1, 0)
-        line = (
+        return (
             line[:start_color]
             + colorama.Style.BRIGHT
-            + line[start_color : end_color + 1]  # want the color to include the end_col
+            + line[
+                start_color : end_color + 1
+            ]  # want the color to include the end_col
             + colorama.Style.RESET_ALL
             + line[end_color + 1 :]
         )
-        return line
 
     @staticmethod
     def _finding_to_line(
@@ -123,9 +124,7 @@ class TextFormatter(BaseFormatter):
         GREEN_COLOR = colorama.Fore.GREEN if color_output else ""
         YELLOW_COLOR = colorama.Fore.YELLOW if color_output else ""
 
-        rule_parsing_time = sum(
-            parse_time for parse_time in time_data["rule_parse_info"]
-        )
+        rule_parsing_time = sum(time_data["rule_parse_info"])
         rule_timings = {
             rule["id"]: functools.reduce(
                 lambda x, y: (x[0] + y[0], x[1] + y[1]),
@@ -145,7 +144,7 @@ class TextFormatter(BaseFormatter):
             for target in time_data["targets"]
         }
 
-        all_total_time = sum(i for i in file_timings.values()) + rule_parsing_time
+        all_total_time = sum(file_timings.values()) + rule_parsing_time
         total_matching_time = sum(i[1] for i in rule_timings.values())
 
         # Output information
@@ -166,7 +165,7 @@ class TextFormatter(BaseFormatter):
             rule_timings.items(), key=lambda x: float(x[1][0]), reverse=True
         )[:items_to_show]
         for rule_id, (total_time, match_time) in slowest_rule_times:
-            rule_id = truncate(rule_id, col_lim) + ":"
+            rule_id = f"{truncate(rule_id, col_lim)}:"
             yield f"{YELLOW_COLOR}{rule_id:<71}{RESET_COLOR} run time {total_time:.4f}  match time {match_time:.4f}"
 
     @staticmethod
@@ -191,7 +190,6 @@ class TextFormatter(BaseFormatter):
             check_id = rule_match.id
             message = rule_match.message
             severity = rule_match.severity.lower()
-            fix = rule_match.fix
             if last_file is None or last_file != current_file:
                 if last_file is not None:
                     yield ""
@@ -221,7 +219,7 @@ class TextFormatter(BaseFormatter):
                 else None
             )
 
-            if fix:
+            if fix := rule_match.fix:
                 yield f"{BLUE_COLOR}autofix:{RESET_COLOR} {fix}"
             elif rule_match.fix_regex:
                 fix_regex = rule_match.fix_regex

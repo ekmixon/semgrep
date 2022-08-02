@@ -7,12 +7,7 @@ def foo1():
     t = x + y
 
 def foo2(c):
-    if c:
-        # ERROR:
-        a = "a"
-    else:
-        # ERROR:
-        a = "b"
+    a = "a" if c else "b"
     # ERROR:
     v = a
 
@@ -23,6 +18,6 @@ def foo3(c):
     while c:
         # TODO:
         # OK:
-        x = x + " hi"
+        x = f"{x} hi"
     # ERROR:
     y = x

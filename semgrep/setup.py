@@ -60,9 +60,7 @@ except FileNotFoundError:
 
 
 def find_executable(env_name, exec_name):
-    # First, check for an environment override
-    env_value = os.getenv(env_name)
-    if env_value:
+    if env_value := os.getenv(env_name):
         return env_value
 
     # Second, fallback to any system executable

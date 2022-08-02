@@ -31,10 +31,7 @@ def _mark_masked(obj, path_items):
     if len(path_items) == 1 and key in obj:
         obj[key] = "<masked in tests>"
     else:
-        if key == "*":
-            next_obj = list(obj.values())
-        else:
-            next_obj = obj.get(key)
+        next_obj = list(obj.values()) if key == "*" else obj.get(key)
         if next_obj is None:
             next_objs = []
         elif not isinstance(next_obj, list):

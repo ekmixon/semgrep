@@ -60,8 +60,7 @@ def debug_tqdm_write(msg: str, file: IO = sys.stderr) -> None:
 
 def flatten(L: Iterable[Iterable[Any]]) -> Iterable[Any]:
     for list in L:
-        for item in list:
-            yield item
+        yield from list
 
 
 def set_flags(verbose: bool, debug: bool, quiet: bool, force_color: bool) -> None:
@@ -121,7 +120,7 @@ def with_color(color: str, text: str, bold: bool = False) -> str:
 
     reset = Fore.RESET
     if bold:
-        color = color + "\033[1m"
+        color += "\033[1m"
         reset += "\033[0m"
     return f"{color}{text}{reset}"
 
@@ -142,18 +141,14 @@ def progress_bar(
         iterable
     )  # Consume iterable once so we can check length and then use in tqdm.
     if file.isatty() and len(listified) > 1 and not is_quiet() and not is_debug():
-        # mypy doesn't seem to want to follow tqdm imports. Do this to placate.
-        wrapped: Iterable[T] = tqdm(listified, file=file, **kwargs)
-        return wrapped
+        return tqdm(listified, file=file, **kwargs)
     return listified
 
 
 def sub_run(cmd: List[str], **kwargs: Any) -> Any:
     """A simple proxy function to minimize and centralize subprocess usage."""
-    # fmt: off
-    result = subprocess.run(cmd, **kwargs)  # nosem: python.lang.security.audit.dangerous-subprocess-use.dangerous-subprocess-use
     # fmt: on
-    return result
+    return subprocess.run(cmd, **kwargs)
 
 
 def sub_check_output(cmd: List[str], **kwargs: Any) -> Any:
@@ -161,9 +156,8 @@ def sub_check_output(cmd: List[str], **kwargs: Any) -> Any:
     # fmt: off
     if is_quiet():
         kwargs = {**kwargs, "stderr": subprocess.DEVNULL}
-    result = subprocess.check_output(cmd, **kwargs)  # nosem: python.lang.security.audit.dangerous-subprocess-use.dangerous-subprocess-use
     # fmt: on
-    return result
+    return subprocess.check_output(cmd, **kwargs)
 
 
 def manually_search_file(path: str, search_term: str, suffix: str) -> Optional[str]:
@@ -178,7 +172,7 @@ def manually_search_file(path: str, search_term: str, suffix: str) -> Optional[s
         words = contents.split()
     # Find all of the individual words that contain the search_term
     matches = [w for w in words if search_term in w]
-    return matches[0] + suffix if len(matches) > 0 else None
+    return matches[0] + suffix if matches else None
 
 
 def compute_executable_path(exec_name: str) -> str:
@@ -257,7 +251,7 @@ def format_bytes(num: float) -> str:
 
 def truncate(file_name: str, col_lim: int) -> str:
     name_len = len(file_name)
-    prefix = "..."
     if name_len > col_lim:
+        prefix = "..."
         file_name = prefix + file_name[name_len - col_lim + len(prefix) :]
     return file_name

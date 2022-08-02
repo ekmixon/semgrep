@@ -31,8 +31,6 @@ def from_import_test1(url):
 def test2():
     """Perform a requests.get and default headers set"""
     headers = {**_get_default_headers(), **headers}
-    # ok
-    r = requests.get(
+    return requests.get(
         url, headers=headers, params=params, **{"timeout": TIMEOUT, **kwargs}
     )
-    return r

@@ -50,7 +50,7 @@ def count_lines_in_file(p: Path) -> int:
     generated in the TargetManager
     """
     # https://stackoverflow.com/a/37600991
-    return sum(1 for i in open(p, "rb"))
+    return sum(1 for _ in open(p, "rb"))
 
 
 def count_lines_by_path_extension(paths: Set[Path]) -> Dict[FileExtension, int]:

@@ -30,9 +30,7 @@ def unsafe3(request):
 
 
 def unsafe4(request):
-    # ruleid: open-redirect
-    url = request.get_referrer()  # I made this up, but if it exists don't do this
-    if url:
+    if url := request.get_referrer():
         return HttpResponseRedirect(url)
 
 
@@ -48,16 +46,13 @@ def url_validation(request):
         url=next, allowed_hosts=request.get_host()
     ):
         next = "/index"
-    response = HttpResponseRedirect(next) if next else HttpResponse(status=204)
-    return response
+    return HttpResponseRedirect(next) if next else HttpResponse(status=204)
 
 
 def url_validation2(request):
     # ok: open-redirect
     next = request.POST.get("next", request.GET.get("next"))
-    ok = is_safe_url(url=next, allowed_hosts=request.get_host())
-    if ok:
-        response = HttpResponseRedirect(next) if next else HttpResponse(status=204)
+    if ok := is_safe_url(url=next, allowed_hosts=request.get_host()):
+        return HttpResponseRedirect(next) if next else HttpResponse(status=204)
     else:
-        response = HttpResponseRedirect("index")
-    return response
+        return HttpResponseRedirect("index")

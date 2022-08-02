@@ -1,8 +1,5 @@
 a = source1()
-if True:
-    b = a
-    b = sanitize1()
-else:
-    b = a
+b = a
+b = sanitize1()
 #ERROR:
 sink1(b)

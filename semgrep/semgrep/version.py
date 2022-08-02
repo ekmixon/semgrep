@@ -112,7 +112,4 @@ def is_running_latest(version_cache_path: Path = VERSION_CACHE_PATH) -> bool:
         logger.debug(f"Invalid version string: {e}")
         return False
 
-    if current_version < latest_version:
-        return False
-
-    return True
+    return current_version >= latest_version

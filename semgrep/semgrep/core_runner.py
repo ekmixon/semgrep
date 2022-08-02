@@ -93,24 +93,21 @@ class CoreRunner:
                     pattern=error_json.get("pattern", "<no pattern>"),
                     language=error_json.get("language", "<no language>"),
                 )
-            else:
-                matching_pattern = next(
-                    (p for p in patterns if p._id == error_json["pattern_id"]), None
+            matching_pattern = next(
+                (p for p in patterns if p._id == error_json["pattern_id"]), None
+            )
+            if matching_pattern is None or matching_pattern.span is None:
+                raise SemgrepError(
+                    f"Pattern id from semgrep-core was missing in pattern spans. {PLEASE_FILE_ISSUE_TEXT}"
                 )
-                if matching_pattern is None or matching_pattern.span is None:
-                    raise SemgrepError(
-                        f"Pattern id from semgrep-core was missing in pattern spans. {PLEASE_FILE_ISSUE_TEXT}"
-                    )
-                matching_span = matching_pattern.span
+            matching_span = matching_pattern.span
 
-                raise InvalidPatternError(
-                    short_msg=error_type,
-                    long_msg=f"Pattern could not be parsed as a {error_json['language']} semgrep pattern",
-                    spans=[matching_span],
-                    help=None,
-                )
-        # no special formatting ought to be required for the other types; the semgrep python should be performing
-        # validation for them. So if any other type of error occurs, ask the user to file an issue
+            raise InvalidPatternError(
+                short_msg=error_type,
+                long_msg=f"Pattern could not be parsed as a {error_json['language']} semgrep pattern",
+                spans=[matching_span],
+                help=None,
+            )
         else:
             raise SemgrepError(
                 f"an internal error occured while invoking semgrep-core while running rule '{rule.id}'. Consider skipping this rule and reporting this issue.\n\t{error_type}: {error_json.get('message', 'no message')}\n{PLEASE_FILE_ISSUE_TEXT}"
@@ -265,7 +262,7 @@ class CoreRunner:
         Set[Path],
         ProfilingData,
     ]:
-        logger.debug(f"Passing whole rules directly to semgrep_core")
+        logger.debug("Passing whole rules directly to semgrep_core")
 
         outputs: Dict[Rule, List[RuleMatch]] = collections.defaultdict(list)
         errors: List[SemgrepError] = []
@@ -282,12 +279,12 @@ class CoreRunner:
                 for language in rule.languages:
                     debug_tqdm_write(f"Running rule {rule.id}...")
                     with tempfile.NamedTemporaryFile(
-                        "w", suffix=".yaml"
-                    ) as rule_file, tempfile.NamedTemporaryFile(
-                        "w"
-                    ) as target_file, tempfile.NamedTemporaryFile(
-                        "w"
-                    ) as equiv_file:
+                                        "w", suffix=".yaml"
+                                    ) as rule_file, tempfile.NamedTemporaryFile(
+                                        "w"
+                                    ) as target_file, tempfile.NamedTemporaryFile(
+                                        "w"
+                                    ) as equiv_file:
                         targets = self.get_files_for_language(
                             language, rule, target_manager
                         )
@@ -329,8 +326,7 @@ class CoreRunner:
                             "-json_time",
                         ]
 
-                        equivalences = rule.equivalences
-                        if equivalences:
+                        if equivalences := rule.equivalences:
                             self._write_equivalences_file(equiv_file, equivalences)
                             cmd += ["-equivalences", equiv_file.name]
 
@@ -371,7 +367,7 @@ class CoreRunner:
                             ):
                                 max_timeout_files.add(err.path)
                     errors.extend(parsed_errors)
-            # end for language ...
+                # end for language ...
         # end for rule ...
 
         return outputs, {}, errors, all_targets, profiling_data

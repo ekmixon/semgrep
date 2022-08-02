@@ -1,6 +1,6 @@
 def foo():
   #ERROR: match
-  print(f"this is good")
+  print("this is good")
 
   # ERROR: match
   print(f"this should {match}")

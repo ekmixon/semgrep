@@ -20,10 +20,7 @@ logger = getLogger(__name__)
 
 def _extract_times(json: Dict[str, Any]) -> Tuple[float, float, float]:
     def check_num(n: Any) -> float:
-        if isinstance(n, float) or isinstance(n, int):
-            return n
-        else:
-            return 0.0
+        return n if isinstance(n, (float, int)) else 0.0
 
     """Extract the matching time from the 'time' field of the spacegrep output.
 
@@ -105,15 +102,14 @@ def run_spacegrep(
                     # aggregate the match times obtained for the different patterns of the rule
                     path_s = str(target)
 
-                    targets_time[path_s] = tuple(  # type: ignore
-                        [
-                            i + j
-                            for i, j in zip(
-                                targets_time.get(path_s, (0.0, 0.0, 0.0)),
-                                _extract_times(output_json),
-                            )
-                        ]
+                    targets_time[path_s] = tuple(
+                        i + j
+                        for i, j in zip(
+                            targets_time.get(path_s, (0.0, 0.0, 0.0)),
+                            _extract_times(output_json),
+                        )
                     )
+
 
             except subprocess.CalledProcessError as e:
                 raw_error = p.stderr

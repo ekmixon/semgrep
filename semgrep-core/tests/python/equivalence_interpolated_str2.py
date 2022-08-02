@@ -6,4 +6,4 @@ bar("aa" "aaa"  "asdasda")
 
 # OK:
 const = 1
-bar("aa" + const)
+bar(f"aa{const}")

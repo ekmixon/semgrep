@@ -1,3 +1,2 @@
 def foo():
-    x = 42 * 42
-    return x
+    return 42 * 42

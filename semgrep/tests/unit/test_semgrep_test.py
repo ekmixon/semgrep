@@ -23,14 +23,12 @@ RULE_IDS = ("a", "b", "a.b", "a.b.c")
 
 
 def _generate_normalize_rule_ids_test_cases() -> Iterator[Tuple[str, Set[str]]]:
-    for comment_begin, comment_end in COMMENT_SYNTAXES:
-        for annotation in ANNOTATIONS:
-            for space in SPACE_OR_NO_SPACE:
-                for rule_combo in powerset(RULE_IDS):
-                    yield (
-                        f"{comment_begin}{space}{annotation}:{space}{(','+space).join(rule_combo)} {comment_end}",
-                        set(rule_combo),
-                    )
+    for (comment_begin, comment_end), annotation, space in product(COMMENT_SYNTAXES, ANNOTATIONS, SPACE_OR_NO_SPACE):
+        for rule_combo in powerset(RULE_IDS):
+            yield (
+                f"{comment_begin}{space}{annotation}:{space}{f',{space}'.join(rule_combo)} {comment_end}",
+                set(rule_combo),
+            )
 
 
 @pytest.mark.parametrize(
@@ -41,9 +39,8 @@ def test_normalize_rule_ids(test_case, expected):
 
 
 def _generate_line_has_test_cases(annotation: str) -> Iterator[str]:
-    for comment_begin, comment_end in COMMENT_SYNTAXES:
-        for space in SPACE_OR_NO_SPACE:
-            yield f"{comment_begin}{space}{annotation}:{space}{RULE_IDS[-1]}{comment_end}".strip()
+    for (comment_begin, comment_end), space in product(COMMENT_SYNTAXES, SPACE_OR_NO_SPACE):
+        yield f"{comment_begin}{space}{annotation}:{space}{RULE_IDS[-1]}{comment_end}".strip()
 
 
 @pytest.mark.parametrize(

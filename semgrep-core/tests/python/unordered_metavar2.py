@@ -7,8 +7,7 @@ class C:
         self.default.append(1)
         
     def some_other_function(self):
-        x = 5
-        return x
+        return 5
         
 #ERROR: match
 class D:
@@ -21,8 +20,7 @@ class D:
         
     
     def some_other_function(self):
-        x = 5
-        return x
+        return 5
         
 #ERROR: match
 class E:
@@ -30,8 +28,7 @@ class E:
         self.default = default
     
     def some_other_function(self):
-        x = 5
-        return x
+        return 5
         
     def b(self, x):
         self.default.append(1)
